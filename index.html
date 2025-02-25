@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مشغل الفيديوهات</title>
+  <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .swiper {
+      width: 100%;
+      height: 100vh;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      width: 90%;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .progress-bar {
+      flex-grow: 1;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+    }
+
+    .progress {
+      height: 100%;
+      background: #fff;
+      width: 0;
+      transition: width 0.1s linear;
+    }
+
+    .play-pause, .sound-toggle {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .swiper-pagination {
+      right: auto;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .swiper-pagination-bullet {
+      background: #fff;
+      opacity: 0.5;
+      margin: 8px 0 !important;
+    }
+
+    .swiper-pagination-bullet-active {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      <!-- سيتم إضافة الفيديوهات هنا عبر الجافاسكريبت -->
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+
+  <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+  <script>
+    // قائمة الفيديوهات المتاحة
+    const videos = [
+      "https://e.top4top.io/m_3343okrfd0.mp4",
+      "https://i.top4top.io/m_33430sh7r1.mp4",
+      "https://b.top4top.io/m_33434zd4t2.mp4"
+    ];
+
+    const swiperWrapper = document.querySelector('.swiper-wrapper');
+
+    // اختيار فيديو عشوائي عند البداية
+    let randomIndex = Math.floor(Math.random() * videos.length);
+
+    // إنشاء الشرائح وإضافة الفيديوهات داخلها
+    videos.forEach((videoSrc, index) => {
+      const slide = document.createElement('div');
+      slide.classList.add('swiper-slide');
+
+      slide.innerHTML = `
+        <div class="video-container">
+          <video src="${videoSrc}" ${index === randomIndex ? "autoplay" : ""} playsinline controlslist="nodownload"></video>
+          <div class="controls">
+            <button class="play-pause">▶</button>
+            <button class="sound-toggle">🔊</button>
+            <div class="progress-bar">
+              <div class="progress"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      swiperWrapper.appendChild(slide);
+    });
+
+    // تهيئة Swiper
+    const swiper = new Swiper('.swiper', {
+      direction: 'vertical',
+      slidesPerView: 1,
+      spaceBetween: 0,
+      mousewheel: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true
+      },
+      on: {
+        slideChange: function () {
+          handleSlideChange(this);
+        }
+      }
+    });
+
+    function handleSlideChange(swiper) {
+      // إيقاف الفيديو السابق
+      const prevSlide = swiper.slides[swiper.previousIndex];
+      const prevVideo = prevSlide.querySelector('video');
+      prevVideo.pause();
+      prevVideo.currentTime = 0;
+      prevSlide.querySelector('.play-pause').innerHTML = '▶';
+      prevSlide.querySelector('.progress').style.width = '0%';
+
+      // تشغيل الفيديو الجديد تلقائيًا
+      const currentSlide = swiper.slides[swiper.activeIndex];
+      const currentVideo = currentSlide.querySelector('video');
+      currentVideo.play();
+      currentSlide.querySelector('.play-pause').innerHTML = '⏸';
+    }
+
+    // التحكم في الفيديوهات
+    function handleVideoControls(video, container) {
+      const progress = container.querySelector('.progress');
+      const playBtn = container.querySelector('.play-pause');
+      const soundToggle = container.querySelector('.sound-toggle');
+
+      video.addEventListener('timeupdate', () => {
+        if (video.duration) {
+          const percent = (video.currentTime / video.duration) * 100;
+          progress.style.width = `${percent}%`;
+        }
+      });
+
+      playBtn.addEventListener('click', () => togglePlay(video, playBtn));
+      video.addEventListener('click', () => togglePlay(video, playBtn));
+
+      soundToggle.addEventListener('click', () => {
+        video.muted = !video.muted;
+        soundToggle.innerHTML = video.muted ? '🔇' : '🔊';
+      });
+    }
+
+    function togglePlay(video, playBtn) {
+      if (video.paused) {
+        video.play();
+        playBtn.innerHTML = '⏸';
+      } else {
+        video.pause();
+        playBtn.innerHTML = '▶';
+      }
+    }
+
+    // تطبيق التحكم على جميع الفيديوهات
+    document.querySelectorAll('.swiper-slide').forEach(slide => {
+      const video = slide.querySelector('video');
+      const container = slide.querySelector('.video-container');
+      handleVideoControls(video, container);
+    });
+
+  </script>
+</body>
+</html>
